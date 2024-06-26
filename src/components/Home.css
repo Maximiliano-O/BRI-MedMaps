@@ -1,0 +1,16 @@
+h1 a {
+    text-decoration: none;  
+    color: inherit;
+    line-height: 0.8;         
+}
+
+.search-bar-container {
+    padding-top: 1vh;
+    width: 40%;
+    margin-left: 0;
+    margin: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 300px;
+}

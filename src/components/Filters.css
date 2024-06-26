@@ -1,0 +1,17 @@
+.custom-checkbox {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    width: 15px;
+    height: 15px;
+    border: 1px solid #000;
+    border-radius: 3px;
+    outline: none;
+    cursor: pointer;
+    background-color: #fff;
+    margin-right: 2px;
+  }
+  
+  .custom-checkbox:checked {
+    background-color: #000;
+  }
