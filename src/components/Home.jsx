@@ -1,5 +1,4 @@
-import { SearchBar } from './SearchBar.jsx';
-import { SearchResultsList } from './SearchResultsList.jsx'
+import SearchBar from './SearchBar.jsx';
 import { useState } from 'react';
 import './Home.css';
 
@@ -11,7 +10,6 @@ const Home = () => {
       <h1><a href="/globe">Med Maps</a></h1>
         <div className="search-bar-container">
           <SearchBar setResults={setResults} color="theme"/>
-          <SearchResultsList results={results}/>        
         </div>
     </div>
   );

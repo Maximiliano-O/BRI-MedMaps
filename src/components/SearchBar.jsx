@@ -3,34 +3,21 @@ import { FiSearch } from "react-icons/fi";
 import { IconContext } from "react-icons";
 import './SearchBar.css';
 
-export const SearchBar = ({ setResults }) => {
+const SearchBar = ({ onSearch }) => {
   const [input, setInput] = useState("");
-
-  const fetchData = (value) => {
-    fetch("https://jsonplaceholder.typicode.com/users")
-      .then((response) => response.json())
-      .then((json) => {
-        const results = json.filter((user) => {
-          return (
-            value &&
-            user && 
-            user.name && 
-            user.name.toLowerCase().includes(value)
-          );
-        });
-        setResults(results);
-      });
-  };
 
   const handleChange = (value) => {
     setInput(value);
-    fetchData(value);
-  }
+  };
+
+  const handleSearch = () => {
+    onSearch(input); // Envía el término de búsqueda al componente padre (GlobeView) solo cuando se presiona el botón
+  };
 
   return (
     <div className="search-container">
       <div className='input-wrapper'>
-        <IconContext.Provider value={{color:"gray", size:"1.75em"}}>
+        <IconContext.Provider value={{ color: "gray", size: "1.75em" }}>
           <FiSearch id="search-icon" />
         </IconContext.Provider>
         <input 
@@ -39,7 +26,9 @@ export const SearchBar = ({ setResults }) => {
           onChange={(e) => handleChange(e.target.value)}
         />
       </div>
-      <button className='myButton'>Buscar</button>
+      <button className='myButton' onClick={handleSearch}>Buscar</button>
     </div>
   );
 };
+
+export default SearchBar;

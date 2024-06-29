@@ -1,24 +1,26 @@
+import React, { useState } from 'react';
 import Globe3D from './Globe3D';
-import { SearchBar } from './SearchBar.jsx';
-import { SearchResultsList } from './SearchResultsList.jsx'
-import { useState } from 'react';
+import SearchBar from './SearchBar';
 import './GlobeView.css';
 
 const GlobeView = () => {
-  const [results, setResults] = useState([]);
-    return (
-      <div id='testing'>
-        <h1> <a href="/">Med Maps</a></h1>
-          <div className='align'>
-            <div className="search-bar-container">
-              <SearchBar setResults={setResults} color="theme"/>
-              <SearchResultsList results={results}/>        
-            </div>
-          </div>
-          <Globe3D/>
-      </div>
-    );
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const handleSearch = (term) => {
+    setSearchTerm(term); // Actualiza el término de búsqueda cuando se presiona el botón
   };
-  
-  export default GlobeView;
-  
+
+  return (
+    <div id='testing'>
+      <h1><a href="/">Med Maps</a></h1>
+      <div className='align'>
+        <div className="search-bar-container">
+          <SearchBar onSearch={handleSearch} />      
+        </div>
+      </div>
+      <Globe3D searchTerm={searchTerm} /> {/* Pasar el término de búsqueda al componente del globo */}
+    </div>
+  );
+};
+
+export default GlobeView;
