@@ -1,17 +1,20 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FiSearch } from "react-icons/fi";
 import { IconContext } from "react-icons";
+import { useNavigate } from "react-router-dom";
 import './SearchBar.css';
 
-const SearchBar = ({ onSearch }) => {
-  const [input, setInput] = useState("");
+const SearchBar = ({ initialQuery }) => {
+  const [input, setInput] = useState(initialQuery || "");
+
+  const navigate = useNavigate();
 
   const handleChange = (value) => {
     setInput(value);
   };
 
   const handleSearch = () => {
-    onSearch(input); // Envía el término de búsqueda al componente padre (GlobeView) solo cuando se presiona el botón
+    navigate(`/globe?query=${input}`);
   };
 
   return (
@@ -21,12 +24,12 @@ const SearchBar = ({ onSearch }) => {
           <FiSearch id="search-icon" />
         </IconContext.Provider>
         <input 
-          placeholder="Ingrese el medicamento" 
+          placeholder="Type your query" 
           value={input} 
           onChange={(e) => handleChange(e.target.value)}
         />
       </div>
-      <button className='myButton' onClick={handleSearch}>Buscar</button>
+      <button className='myButton' onClick={handleSearch}>Search</button>
     </div>
   );
 };

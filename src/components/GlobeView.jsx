@@ -1,24 +1,24 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Globe3D from './Globe3D';
 import SearchBar from './SearchBar';
+import { useSearchParams } from 'react-router-dom';
 import './GlobeView.css';
 
 const GlobeView = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-
-  const handleSearch = (term) => {
-    setSearchTerm(term); // Actualiza el término de búsqueda cuando se presiona el botón
-  };
+  const [searchParams] = useSearchParams();
+  const query = searchParams.get("query") || '';
 
   return (
     <div id='testing'>
-      <h1><a href="/">Med Maps</a></h1>
-      <div className='align'>
+      <div className="header">
+        <h1><a href="/">Med Maps</a></h1>
         <div className="search-bar-container">
-          <SearchBar onSearch={handleSearch} />      
+          <SearchBar initialQuery={query} />      
         </div>
       </div>
-      <Globe3D searchTerm={searchTerm} /> {/* Pasar el término de búsqueda al componente del globo */}
+      <div className="globe-container">
+        <Globe3D query={query} />
+      </div>
     </div>
   );
 };
