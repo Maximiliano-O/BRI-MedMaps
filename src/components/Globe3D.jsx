@@ -12,6 +12,8 @@ const Globe3D = ({ query }) => {
   const globeEl = useRef(null);
   const [landPolygons, setLandPolygons] = useState([]);
   const [hoverD, setHoverD] = useState();
+  const [countryFrequencies, setCountryFrequencies] = useState([]);
+  const [initialLoad, setInitialLoad] = useState(true); // Flag for initial load
 
   useEffect(() => {
     // Fetch country boundaries
@@ -31,7 +33,6 @@ const Globe3D = ({ query }) => {
       }
 
       try {
-        // Request to Elasticsearch to get frequency per country and tags
         const response = await axios.post('http://localhost:9200/posts/_search', {
           size: 10,
           query: {
@@ -39,8 +40,8 @@ const Globe3D = ({ query }) => {
               should: [
                 {
                   multi_match: {
-                    query: query,
-                    fields: ["titulo", "topico", "etiquetas"],
+                    query: query || '',
+                    fields: ["titulo", "topico"],
                     type: "phrase",
                     slop: 10
                   }
@@ -64,11 +65,6 @@ const Globe3D = ({ query }) => {
           aggs: {
             countries: {
               terms: { field: 'pais' }
-            },
-            tags: {
-              terms: {
-                field: "etiquetas"
-              }
             }
           }
         });
@@ -78,33 +74,41 @@ const Globe3D = ({ query }) => {
           value: bucket.doc_count
         }));
 
-        // Calculate max frequency
-        const maxFrequency = Math.max(...countries.map(country => country.value));
-
-        // Update landPolygons with frequency data
-        const updatedPolygons = landPolygons.map(country => {
-          const countryData = countries.find(c => c.name === country.properties.name);
-          const freq = countryData ? countryData.value : 0;
-          const normalizedFrequency = freq / maxFrequency;
-
-          return {
-            ...country,
-            properties: {
-              ...country.properties,
-              freq: freq,
-              normalizedFreq: normalizedFrequency // Store normalized frequency
-            }
-          };
-        });
-
-        setLandPolygons(updatedPolygons);
+        setCountryFrequencies(countries);
       } catch (error) {
         console.error('Error searching:', error);
       }
     };
 
-    fetchData();
-  }, [query]); // Dependency array only includes 'query'
+    // Fetch data on initial load or when query changes
+    if (initialLoad || query) {
+      fetchData();
+      setInitialLoad(false); // Reset initialLoad flag after first fetch
+    }
+  }, [query, initialLoad]);
+
+  useEffect(() => {
+    if (countryFrequencies.length >= 0 && landPolygons.length > 0) {
+      const maxFrequency = Math.max(...countryFrequencies.map(country => country.value));
+
+      const updatedPolygons = landPolygons.map(country => {
+        const countryData = countryFrequencies.find(c => c.name === country.properties.name);
+        const freq = countryData ? countryData.value : 0;
+        const normalizedFrequency = freq / maxFrequency;
+
+        return {
+          ...country,
+          properties: {
+            ...country.properties,
+            freq: freq,
+            normalizedFreq: normalizedFrequency
+          }
+        };
+      });
+
+      setLandPolygons(updatedPolygons);
+    }
+  }, [query, countryFrequencies]); // Only update when either changes
 
   useEffect(() => {
     if (globeEl.current) {
@@ -112,17 +116,23 @@ const Globe3D = ({ query }) => {
     }
   }, []);
 
-  // Function to calculate color based on normalized frequency
   const getColorByFrequency = (normalizedFreq) => {
     const darkRed = 0; // Hue for dark red
-    const lightness =  normalizedFreq * 55; // Lightness decreases as frequency decreases
+    const lightness = normalizedFreq * 55; // Lightness decreases as frequency decreases
     return `hsl(${darkRed}, 100%, ${lightness}%)`;
+  };
+
+  const handleQueryChange = (newQuery) => {
+    setCountryFrequencies([]); // Reset frequencies to show loading or clear previous data
+    // setLandPolygons([]); // Optional: Reset polygons if needed
+    // setHoverD(null); // Optional: Reset hover if needed
+    fetchData(newQuery); // Fetch new data with the updated query
   };
 
   return (
     <div className="globe-container">
       <div className="filters">
-        <Filters query={query}/>
+        <Filters query={query} onQueryChange={handleQueryChange} />
       </div>
       <div id="globe">
         <Globe
@@ -131,7 +141,7 @@ const Globe3D = ({ query }) => {
           ref={globeEl}
           backgroundColor="rgba(0,0,0,0)"
           showGlobe={true}
-          globeMaterial={globeMaterial} 
+          globeMaterial={globeMaterial}
           showAtmosphere={true}
           atmosphereColor="black"
           atmosphereAltitude={0.03}
@@ -143,7 +153,7 @@ const Globe3D = ({ query }) => {
             const color = getColorByFrequency(normalizedFreq);
             return new THREE.MeshBasicMaterial({ color: color, side: THREE.DoubleSide });
           }}
-          polygonSideColor={() => '#D3D3D3'} 
+          polygonSideColor={() => '#D3D3D3'}
           onPolygonHover={setHoverD}
           polygonsTransitionDuration={300}
         />
