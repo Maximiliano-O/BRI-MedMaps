@@ -7,7 +7,7 @@ const Home = () => {
   const navigate = useNavigate();
 
   const handleSearch = (query) => {
-    // Redirect to globe view with the query parameter
+    // Redirección a la vista del globo
     navigate(`/globe?query=${encodeURIComponent(query)}`);
   };
 

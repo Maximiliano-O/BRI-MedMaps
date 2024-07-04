@@ -13,14 +13,14 @@ const Filters = ({ query }) => {
         }
 
         const response = await axios.post('http://localhost:9200/posts/_search', {
-          size: 0, // Set size to 0 to only get aggregation results
+          size: 0, 
           query: {
             bool: {
               should: [
                 {
                   multi_match: {
                     query: query,
-                    fields: ["titulo", "topico", "etiquetas"],
+                    fields: ["titulo", "topico"],
                     type: "phrase",
                     slop: 10
                   }
@@ -53,7 +53,7 @@ const Filters = ({ query }) => {
           id: bucket.key,
           text: bucket.key,
           count: bucket.doc_count,
-          checked: false // Initialize checked state if needed
+          checked: false 
         }));
 
         setTags(tagList);
@@ -65,7 +65,6 @@ const Filters = ({ query }) => {
     fetchTags();
   }, [query]);
 
-  // Handler function to update the checked state of an item
   const handleCheckboxChange = (id) => {
     setTags(prevTags =>
       prevTags.map(tag =>

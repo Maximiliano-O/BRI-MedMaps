@@ -13,10 +13,9 @@ const Globe3D = ({ query }) => {
   const [landPolygons, setLandPolygons] = useState([]);
   const [hoverD, setHoverD] = useState();
   const [countryFrequencies, setCountryFrequencies] = useState([]);
-  const [initialLoad, setInitialLoad] = useState(true); // Flag for initial load
+  const [initialLoad, setInitialLoad] = useState(true); 
 
   useEffect(() => {
-    // Fetch country boundaries
     fetch('/countries.json')
       .then(res => res.json())
       .then(countryTopo => {
@@ -80,10 +79,9 @@ const Globe3D = ({ query }) => {
       }
     };
 
-    // Fetch data on initial load or when query changes
     if (initialLoad || query) {
       fetchData();
-      setInitialLoad(false); // Reset initialLoad flag after first fetch
+      setInitialLoad(false); 
     }
   }, [query, initialLoad]);
 
@@ -108,7 +106,7 @@ const Globe3D = ({ query }) => {
 
       setLandPolygons(updatedPolygons);
     }
-  }, [query, countryFrequencies]); // Only update when either changes
+  }, [query, countryFrequencies]); 
 
   useEffect(() => {
     if (globeEl.current) {
@@ -116,17 +114,16 @@ const Globe3D = ({ query }) => {
     }
   }, []);
 
+  // Computo de colores
   const getColorByFrequency = (normalizedFreq) => {
-    const darkRed = 0; // Hue for dark red
-    const lightness = normalizedFreq * 55; // Lightness decreases as frequency decreases
+    const darkRed = 0; 
+    const lightness = normalizedFreq * 55; 
     return `hsl(${darkRed}, 100%, ${lightness}%)`;
   };
 
   const handleQueryChange = (newQuery) => {
-    setCountryFrequencies([]); // Reset frequencies to show loading or clear previous data
-    // setLandPolygons([]); // Optional: Reset polygons if needed
-    // setHoverD(null); // Optional: Reset hover if needed
-    fetchData(newQuery); // Fetch new data with the updated query
+    setCountryFrequencies([]); 
+    fetchData(newQuery); 
   };
 
   return (
@@ -156,6 +153,12 @@ const Globe3D = ({ query }) => {
           polygonSideColor={() => '#D3D3D3'}
           onPolygonHover={setHoverD}
           polygonsTransitionDuration={300}
+          polygonLabel={({ properties: d }) => `
+            <div class="polygon-label">
+              <b>${d.name}:</b> <br />
+              Frequency: <i>${d.freq}</i>
+            </div>
+          `}
         />
       </div>
     </div>

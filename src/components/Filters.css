@@ -1,5 +1,5 @@
 .filters-container {
-  margin: 10px; /* Adjust margin as needed */
+  margin: 10px; 
 }
 
 .filters-list {
@@ -27,7 +27,7 @@
   outline: none;
   cursor: pointer;
   background-color: #fff;
-  margin-right: 5px; /* Adjust spacing between checkbox and text */
+  margin-right: 5px; 
 }
 
 .custom-checkbox:checked {
