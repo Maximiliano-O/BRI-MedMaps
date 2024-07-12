@@ -110,14 +110,14 @@ const Globe3D = ({ query }) => {
 
   useEffect(() => {
     if (globeEl.current) {
-      globeEl.current.pointOfView({ altitude: 1.2 });
+      globeEl.current.pointOfView({ lat: 360, lng:10, altitude: 1.4 });
     }
   }, []);
 
   // Computo de colores
   const getColorByFrequency = (normalizedFreq) => {
-    const darkRed = 0; 
-    const lightness = normalizedFreq * 55; 
+    const darkRed = 213;
+    const lightness = ((1 - normalizedFreq) * 70) + 20; 
     return `hsl(${darkRed}, 100%, ${lightness}%)`;
   };
 
@@ -143,14 +143,14 @@ const Globe3D = ({ query }) => {
           atmosphereColor="black"
           atmosphereAltitude={0.03}
           polygonsData={landPolygons}
-          polygonAltitude={d => d === hoverD ? 0.034 : 0.007}
-          polygonStrokeColor={() => '#D3D3D3'}
+          polygonAltitude={d => d === hoverD ? 0.034 : 0.01}
+          polygonStrokeColor={() => '#3b3b3b'}
           polygonCapMaterial={polygon => {
             const normalizedFreq = polygon.properties.normalizedFreq || 0;
             const color = getColorByFrequency(normalizedFreq);
             return new THREE.MeshBasicMaterial({ color: color, side: THREE.DoubleSide });
           }}
-          polygonSideColor={() => '#D3D3D3'}
+          polygonSideColor={() => '#3b3b3b'}
           onPolygonHover={setHoverD}
           polygonsTransitionDuration={300}
           polygonLabel={({ properties: d }) => `
