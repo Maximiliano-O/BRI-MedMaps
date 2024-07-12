@@ -17,6 +17,7 @@ const Globe3D = ({ query }) => {
   const [countryWithMaxFrequency, setCountryWithMaxFrequency] = useState('');
   const [isLegendVisible, setIsLegendVisible] = useState(false);
   const [isInstructionsVisible, setIsInstructionsVisible] = useState(false);
+  const [selectedTags, setSelectedTags] = useState([]);
 
   const toggleLegend = () => {
     setIsLegendVisible(!isLegendVisible);
@@ -36,63 +37,88 @@ const Globe3D = ({ query }) => {
       .catch(error => console.error('Error loading country data:', error));
   }, []);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!query) {
-        return;
-      }
-
-      try {
-        const response = await axios.post('http://localhost:9200/posts/_search', {
-          size: 10,
-          query: {
-            bool: {
-              should: [
-                {
-                  multi_match: {
-                    query: query || '',
-                    fields: ["titulo", "topico"],
-                    type: "phrase",
-                    slop: 10
-                  }
-                },
-                {
-                  nested: {
-                    path: "comentarios",
-                    query: {
-                      multi_match: {
-                        query: query,
-                        fields: ["comentarios.contenido"],
-                        type: "phrase",
-                        slop: 10
-                      }
-                    }
-                  }
-                }
-              ]
-            }
-          },
-          aggs: {
-            countries: {
-              terms: { field: 'pais' }
+  const fetchData = async (mainQuery, selectedTags) => {
+    try {
+      const shouldQueries = [];
+      const filterQueries = [];
+  
+      // Consulta principal con should
+      if (mainQuery) {
+        shouldQueries.push({
+          multi_match: {
+            query: mainQuery || '',
+            fields: ["titulo", "topico"],
+            type: "phrase",
+            slop: 10
+          }
+        });
+  
+        shouldQueries.push({
+          nested: {
+            path: "comentarios",
+            query: {
+              multi_match: {
+                query: mainQuery || '',
+                fields: ["comentarios.contenido"],
+                type: "phrase",
+                slop: 10
+              }
             }
           }
         });
-
-        const countries = response.data.aggregations.countries.buckets.map(bucket => ({
-          name: bucket.key,
-          value: bucket.doc_count
-        }));
-
-        setCountryFrequencies(countries);
-      } catch (error) {
-        console.error('Error searching:', error);
       }
-    };
-
-    fetchData();
-
-  }, [query]);
+  
+      // Filtro por tags seleccionados
+      if (selectedTags.length > 0) {
+        const selectedTagNames = selectedTags.map(tag => tag.text);
+        filterQueries.push({
+          terms: {
+            etiquetas: selectedTagNames
+          }
+        });
+      }
+  
+      console.log('Consulta final a Elasticsearch:', shouldQueries, filterQueries);
+  
+      const response = await axios.post('http://localhost:9200/posts/_search', {
+        size: 10,
+        query: {
+          bool: {
+            should: shouldQueries,
+            minimum_should_match: 1, // Al menos una de las consultas principales debe coincidir
+            filter: filterQueries  // Agregar los filtros de tags aquí
+          }
+        },
+        aggs: {
+          countries: {
+            terms: { field: 'pais' }
+          }
+        }
+      });
+  
+      console.log('Respuesta de Elasticsearch:', response.data);
+  
+      const countries = response.data.aggregations.countries.buckets.map(bucket => ({
+        name: bucket.key,
+        value: bucket.doc_count
+      }));
+  
+      setCountryFrequencies(countries);
+    } catch (error) {
+      console.error('Error searching:', error);
+    }
+  };
+  
+  // Función para manejar cambios en selectedTags
+  const handleTagsChange = (newTags) => {
+    setSelectedTags(newTags); // Actualizar los tags seleccionados en Globe3D
+    setCountryFrequencies([]);
+    fetchData(query, newTags); // Actualizar la consulta con los nuevos tags
+  };
+  
+  useEffect(() => {
+    fetchData(query, selectedTags); // Asegúrate de usar query y selectedTags aquí
+  }, [query, selectedTags]);
 
   useEffect(() => {
     if (countryFrequencies.length > 0) {
@@ -106,7 +132,6 @@ const Globe3D = ({ query }) => {
   }, [countryFrequencies]);
   
   useEffect(() => {
-    console.log('Update de landPolygons');
     if (countryFrequencies.length >= 0 && landPolygons.length >= 0) {
       const maxFrequency = Math.max(...countryFrequencies.map(country => country.value));
   
@@ -163,13 +188,13 @@ const Globe3D = ({ query }) => {
             [lon, lat] = coordinates[0][0][0];
           }
         }
-  
+        /*
         console.log('Country with max frequency:', {
           name: countryWithMaxFreqDetails.properties.name,
           lat: lat,
           lon: lon,
         });
-  
+        */
         if (globeEl.current) {
           globeEl.current.pointOfView({ lat: lat, lng: lon, altitude: 1.4 }, 2000, easeCubic);
         }
@@ -177,7 +202,7 @@ const Globe3D = ({ query }) => {
     }
   }, [countryWithMaxFrequency, landPolygons]);
   
-  // Function to find centroid of coordinates
+  // Funcion para el centroide de francia
   function findCentroid(coordinates) {
     let totalLat = 0;
     let totalLon = 0;
@@ -196,8 +221,6 @@ const Globe3D = ({ query }) => {
     return [totalLon / numPoints, totalLat / numPoints];
   }
   
-  
-
   // Computo de colores
   const getColorByFrequency = (normalizedFreq) => {
     const darkRed = 213;
@@ -205,16 +228,11 @@ const Globe3D = ({ query }) => {
     return `hsl(${darkRed}, 100%, ${lightness}%)`;
   };
 
-  const handleQueryChange = (newQuery) => {
-    setCountryFrequencies([]); 
-    fetchData(newQuery); 
-  };
-
   return (
     <div className="globe-container">
       <div>
         <div className="filters">
-          <Filters query={query} onQueryChange={handleQueryChange} />
+          <Filters query={query} onTagsChange={handleTagsChange} />
         </div>
         <div className="dropdown">
           <button onClick={toggleLegend} className='dropdown-button'>

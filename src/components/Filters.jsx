@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './Filters.css';
 
-const Filters = ({ query }) => {
+const Filters = ({ query, onTagsChange }) => {
   const [tags, setTags] = useState([]);
 
+  // Función para cargar etiquetas desde Elasticsearch
   useEffect(() => {
     const fetchTags = async () => {
       try {
@@ -13,7 +14,7 @@ const Filters = ({ query }) => {
         }
 
         const response = await axios.post('http://localhost:9200/posts/_search', {
-          size: 0, 
+          size: 0,
           query: {
             bool: {
               should: [
@@ -53,7 +54,7 @@ const Filters = ({ query }) => {
           id: bucket.key,
           text: bucket.key,
           count: bucket.doc_count,
-          checked: false 
+          checked: false
         }));
 
         setTags(tagList);
@@ -65,13 +66,18 @@ const Filters = ({ query }) => {
     fetchTags();
   }, [query]);
 
-  const handleCheckboxChange = (id) => {
-    setTags(prevTags =>
-      prevTags.map(tag =>
-        tag.id === id ? { ...tag, checked: !tag.checked } : tag
-      )
-    );
-  };
+  // Función para manejar cambios en la selección de etiquetas
+const handleCheckboxChange = (id) => {
+  const updatedTags = tags.map(tag =>
+    tag.id === id ? { ...tag, checked: !tag.checked } : tag
+  );
+
+  setTags(updatedTags);
+
+  // Filtrar las etiquetas seleccionadas
+  const selectedTags = updatedTags.filter(tag => tag.checked);
+  onTagsChange(selectedTags); // Llamar a la función para actualizar tags en Globe3D
+};
 
   return (
     <div className="filters-container">
