@@ -15,6 +15,16 @@ const Globe3D = ({ query }) => {
   const [hoverD, setHoverD] = useState();
   const [countryFrequencies, setCountryFrequencies] = useState([]);
   const [countryWithMaxFrequency, setCountryWithMaxFrequency] = useState('');
+  const [isLegendVisible, setIsLegendVisible] = useState(false);
+  const [isInstructionsVisible, setIsInstructionsVisible] = useState(false);
+
+  const toggleLegend = () => {
+    setIsLegendVisible(!isLegendVisible);
+  };
+
+  const toggleInstructions = () => {
+    setIsInstructionsVisible(!isInstructionsVisible)
+  };
 
   useEffect(() => {
     fetch('/countries.json')
@@ -202,9 +212,38 @@ const Globe3D = ({ query }) => {
 
   return (
     <div className="globe-container">
-      <div className="filters">
-        <Filters query={query} onQueryChange={handleQueryChange} />
+      <div>
+        <div className="filters">
+          <Filters query={query} onQueryChange={handleQueryChange} />
+        </div>
+        <div className="dropdown">
+          <button onClick={toggleLegend} className='dropdown-button'>
+            {isLegendVisible ? 'Hide Legend' : 'Show Legend'}
+              </button>
+                {isLegendVisible && (
+                  <div>
+                    <img src="/images/Legend.png" alt="Leyenda del mapa" />
+                  </div>
+                )}
+              <button onClick={toggleInstructions} className='dropdown-button'>
+                {isInstructionsVisible ? 'Hide Instructions' : 'Show Instructions'}
+                  </button>
+                  {isInstructionsVisible && (
+                    <div className="instructions">
+                      <p>The globe map that displays the info is interactive.</p>
+                      <p>The globe updates every time a new query is made.</p>
+                      <p>These are the controls:</p>
+                      <ul>
+                        <li>Hold left click on top of the globe and move the mouse to rotate it</li>
+                        <li>Scroll with the mouse wheel on top of the map to adjust zoom</li>
+                        <li>Hover with the mouse over a country to display its name and info</li>
+                        <li>Click on a country to display the relevant documents</li>
+                      </ul>
+                    </div>
+                  )}
+        </div>
       </div>
+      
       <div id="globe">
         <Globe
           width={1200}
