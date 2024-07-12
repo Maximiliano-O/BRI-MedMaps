@@ -14,7 +14,7 @@ const SearchBar = ({ initialQuery }) => {
   };
 
   const handleSearch = () => {
-    navigate(`/globe?query=${input}`);
+    navigate(`/globe?query=${encodeURIComponent(input)}`);
   };
 
   return (

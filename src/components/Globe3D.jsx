@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Globe from 'react-globe.gl';
 import * as THREE from 'three';
 import { feature } from 'topojson-client';
+import { easeCubic } from 'd3-ease';
 import axios from 'axios';
 import './Globe.css';
 import Filters from './Filters';
@@ -13,7 +14,7 @@ const Globe3D = ({ query }) => {
   const [landPolygons, setLandPolygons] = useState([]);
   const [hoverD, setHoverD] = useState();
   const [countryFrequencies, setCountryFrequencies] = useState([]);
-  const [initialLoad, setInitialLoad] = useState(true); 
+  const [countryWithMaxFrequency, setCountryWithMaxFrequency] = useState('');
 
   useEffect(() => {
     fetch('/countries.json')
@@ -79,21 +80,31 @@ const Globe3D = ({ query }) => {
       }
     };
 
-    if (initialLoad || query) {
-      fetchData();
-      setInitialLoad(false); 
-    }
-  }, [query, initialLoad]);
+    fetchData();
+
+  }, [query]);
 
   useEffect(() => {
-    if (countryFrequencies.length >= 0 && landPolygons.length > 0) {
+    if (countryFrequencies.length > 0) {
       const maxFrequency = Math.max(...countryFrequencies.map(country => country.value));
-
+      const countryData = countryFrequencies.find(country => country.value === maxFrequency);
+  
+      if (countryData) {
+        setCountryWithMaxFrequency(countryData.name);
+      }
+    }
+  }, [countryFrequencies]);
+  
+  useEffect(() => {
+    console.log('Update de landPolygons');
+    if (countryFrequencies.length >= 0 && landPolygons.length >= 0) {
+      const maxFrequency = Math.max(...countryFrequencies.map(country => country.value));
+  
       const updatedPolygons = landPolygons.map(country => {
         const countryData = countryFrequencies.find(c => c.name === country.properties.name);
         const freq = countryData ? countryData.value : 0;
         const normalizedFrequency = freq / maxFrequency;
-
+  
         return {
           ...country,
           properties: {
@@ -104,15 +115,78 @@ const Globe3D = ({ query }) => {
         };
       });
 
-      setLandPolygons(updatedPolygons);
+      setLandPolygons(prevPolygons => {
+        if (JSON.stringify(prevPolygons) !== JSON.stringify(updatedPolygons)) {
+          return updatedPolygons;
+        }
+        return prevPolygons;
+      });
     }
-  }, [query, countryFrequencies]); 
+  }, [countryFrequencies, landPolygons]);
 
   useEffect(() => {
-    if (globeEl.current) {
-      globeEl.current.pointOfView({ lat: 360, lng:10, altitude: 1.4 });
+    
+    if (countryWithMaxFrequency) {
+      
+      const countryWithMaxFreqDetails = landPolygons.find(
+        country => country.properties.name === countryWithMaxFrequency
+      );
+  
+      if (countryWithMaxFreqDetails) {
+
+        let lat = null;
+        let lon = null;
+  
+        // Find appropriate coordinates for the country
+        if (countryWithMaxFreqDetails.properties.name === 'France') {
+          // Look for coordinates specifically for mainland France
+          const franceCoordinates = countryWithMaxFreqDetails.geometry.coordinates;
+          if (franceCoordinates && franceCoordinates.length > 0) {
+            // Find a centroid point for mainland France
+            const centroid = findCentroid(franceCoordinates);
+            [lon, lat] = centroid;
+          }
+        } else {
+          // For other countries, use the first point of the first polygon
+          const coordinates = countryWithMaxFreqDetails.geometry.coordinates;
+          if (coordinates && coordinates.length > 0 && coordinates[0].length > 0) {
+            [lon, lat] = coordinates[0][0][0];
+          }
+        }
+  
+        console.log('Country with max frequency:', {
+          name: countryWithMaxFreqDetails.properties.name,
+          lat: lat,
+          lon: lon,
+        });
+  
+        if (globeEl.current) {
+          globeEl.current.pointOfView({ lat: lat, lng: lon, altitude: 1.4 }, 2000, easeCubic);
+        }
+      }
     }
-  }, []);
+  }, [countryWithMaxFrequency, landPolygons]);
+  
+  // Function to find centroid of coordinates
+  function findCentroid(coordinates) {
+    let totalLat = 0;
+    let totalLon = 0;
+    let numPoints = 0;
+  
+    coordinates.forEach(polygon => {
+      polygon.forEach(ring => {
+        ring.forEach(point => {
+          totalLon += point[0];
+          totalLat += point[1];
+          numPoints++;
+        });
+      });
+    });
+  
+    return [totalLon / numPoints, totalLat / numPoints];
+  }
+  
+  
 
   // Computo de colores
   const getColorByFrequency = (normalizedFreq) => {
@@ -143,14 +217,14 @@ const Globe3D = ({ query }) => {
           atmosphereColor="black"
           atmosphereAltitude={0.03}
           polygonsData={landPolygons}
-          polygonAltitude={d => d === hoverD ? 0.034 : 0.01}
-          polygonStrokeColor={() => '#3b3b3b'}
+          polygonAltitude={d => d === hoverD ? 0.04 : 0.01}
+          polygonStrokeColor={() => '#000'}
           polygonCapMaterial={polygon => {
             const normalizedFreq = polygon.properties.normalizedFreq || 0;
             const color = getColorByFrequency(normalizedFreq);
             return new THREE.MeshBasicMaterial({ color: color, side: THREE.DoubleSide });
           }}
-          polygonSideColor={() => '#3b3b3b'}
+          polygonSideColor={() => '#000'}
           onPolygonHover={setHoverD}
           polygonsTransitionDuration={300}
           polygonLabel={({ properties: d }) => `
