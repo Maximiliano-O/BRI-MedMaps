@@ -1,9 +1,21 @@
-h1 a {
-    text-decoration: none;  
-    color: inherit;
-    line-height: 1.1;         
-}
+@import './SearchBar.css';
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px;
+  }
+  
+  .header h1 {
+    margin: 0; 
+  }
+  
+  .search-bar-container {
+    margin-left: 100px;
+    position: relative;
+  }
 
-.align{
-    margin: 20px;
-}
+  .globe-container {
+    margin-top: 20px; 
+  }
+  

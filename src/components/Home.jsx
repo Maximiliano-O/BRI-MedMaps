@@ -1,18 +1,15 @@
-import { SearchBar } from './SearchBar.jsx';
-import { SearchResultsList } from './SearchResultsList.jsx'
+import SearchBar from './SearchBar';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Home.css';
 
 const Home = () => {
-  const [results, setResults] = useState([]);
-
   return (
     <div id='testing'>
-      <h1><a href="/globe">Med Maps</a></h1>
-        <div className="search-bar-container">
-          <SearchBar setResults={setResults} color="theme"/>
-          <SearchResultsList results={results}/>        
-        </div>
+      <h1><a href="/">Med Maps</a></h1>
+      <div className="search-bar-container">
+        <SearchBar color="theme" />
+      </div>
     </div>
   );
 };

@@ -13,11 +13,11 @@
     display: flex;
     align-items: center;
     box-shadow: 0px 0px 2px gray;
-    margin-right: 8px; /* Add margin to create space between the input wrapper and button */
+    margin-right: 8px; 
 }
 
 #search-icon {
-    margin-right: 10px; /* Adjust margin to space out the icon and input */
+    margin-right: 10px; 
 }
 
 input {
@@ -37,7 +37,7 @@ input:focus {
     color: rgb(255, 255, 255); 
     font-size: 18px; 
     line-height: 18px; 
-    padding: 24px 18px; /* Adjust padding to match the height of the input */
+    padding: 24px 18px; 
     border-radius: 8px; 
     font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
     font-weight: bold; 

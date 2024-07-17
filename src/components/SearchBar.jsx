@@ -1,45 +1,37 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FiSearch } from "react-icons/fi";
 import { IconContext } from "react-icons";
+import { useNavigate } from "react-router-dom";
 import './SearchBar.css';
 
-export const SearchBar = ({ setResults }) => {
-  const [input, setInput] = useState("");
+const SearchBar = ({ initialQuery }) => {
+  const [input, setInput] = useState(initialQuery || "");
 
-  const fetchData = (value) => {
-    fetch("https://jsonplaceholder.typicode.com/users")
-      .then((response) => response.json())
-      .then((json) => {
-        const results = json.filter((user) => {
-          return (
-            value &&
-            user && 
-            user.name && 
-            user.name.toLowerCase().includes(value)
-          );
-        });
-        setResults(results);
-      });
-  };
+  const navigate = useNavigate();
 
   const handleChange = (value) => {
     setInput(value);
-    fetchData(value);
-  }
+  };
+
+  const handleSearch = () => {
+    navigate(`/globe?query=${encodeURIComponent(input)}`);
+  };
 
   return (
     <div className="search-container">
       <div className='input-wrapper'>
-        <IconContext.Provider value={{color:"gray", size:"1.75em"}}>
+        <IconContext.Provider value={{ color: "gray", size: "1.75em" }}>
           <FiSearch id="search-icon" />
         </IconContext.Provider>
         <input 
-          placeholder="Ingrese el medicamento" 
+          placeholder="Type your query" 
           value={input} 
           onChange={(e) => handleChange(e.target.value)}
         />
       </div>
-      <button className='myButton'>Buscar</button>
+      <button className='myButton' onClick={handleSearch}>Search</button>
     </div>
   );
 };
+
+export default SearchBar;
