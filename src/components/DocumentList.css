@@ -1,0 +1,52 @@
+.document-list-container {
+  padding: 5px;
+  width: 300px;
+}
+
+.document-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  max-height: 280px; 
+  overflow-y: auto; 
+}
+
+.document-card {
+  background-color: #fff;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  width: 250px; /* Ajusta el ancho según sea necesario */
+}
+
+.document-card:hover {
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.comments {
+  margin-top: 10px;
+}
+
+.comments h4 {
+  margin-bottom: 5px;
+}
+
+.comments ul {
+  list-style: none;
+  padding: 0;
+}
+
+.comments li {
+  margin-bottom: 10px;
+}
+
+.comments p {
+  margin: 2px 0;
+}
+
+.comment-divider {
+  margin: 10px 0;
+  border-top: 1px solid #000;
+}

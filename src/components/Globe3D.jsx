@@ -6,6 +6,7 @@ import { easeCubic } from 'd3-ease';
 import axios from 'axios';
 import './Globe.css';
 import Filters from './Filters';
+import DocumentList from './DocumentList.jsx'; 
 
 const globeMaterial = new THREE.MeshBasicMaterial();
 
@@ -18,6 +19,10 @@ const Globe3D = ({ query }) => {
   const [isLegendVisible, setIsLegendVisible] = useState(false);
   const [isInstructionsVisible, setIsInstructionsVisible] = useState(false);
   const [selectedTags, setSelectedTags] = useState([]);
+  const [documentsByCountry, setDocumentsByCountry] = useState({});
+  const [selectedDocuments, setSelectedDocuments] = useState([]);
+  const [isSidebarVisible, setIsSidebarVisible] = useState(false);
+  const [documentsCountry, setDocumentsCountry] = useState('');
 
   const toggleLegend = () => {
     setIsLegendVisible(!isLegendVisible);
@@ -81,7 +86,7 @@ const Globe3D = ({ query }) => {
       console.log('Consulta final a Elasticsearch:', shouldQueries, filterQueries);
   
       const response = await axios.post('http://localhost:9200/posts/_search', {
-        size: 10,
+        size: 500,
         query: {
           bool: {
             should: shouldQueries,
@@ -104,9 +109,35 @@ const Globe3D = ({ query }) => {
       }));
   
       setCountryFrequencies(countries);
+
+      // Guardar los documentos por país
+      const docsByCountry = {};
+      response.data.hits.hits.forEach(hit => {
+        const country = hit._source.pais;
+        if (!docsByCountry[country]) {
+          docsByCountry[country] = [];
+        }
+        docsByCountry[country].push(hit._source);
+      });
+  
+      setDocumentsByCountry(docsByCountry);
     } catch (error) {
       console.error('Error searching:', error);
     }
+  };
+
+  // Manejar click en polígono
+  const handlePolygonClick = (polygon) => {
+    const countryName = polygon.properties.name;
+    setDocumentsCountry(countryName);
+    const documents = documentsByCountry[countryName] || [];
+    console.log('Documentos para', countryName, documents);
+    setSelectedDocuments(documents);
+    setIsSidebarVisible(true); // Mostrar la barra lateral
+  };
+
+  const closeSidebar = () => {
+    setIsSidebarVisible(false);
   };
   
   // Función para manejar cambios en selectedTags
@@ -172,17 +203,13 @@ const Globe3D = ({ query }) => {
         let lat = null;
         let lon = null;
   
-        // Find appropriate coordinates for the country
         if (countryWithMaxFreqDetails.properties.name === 'France') {
-          // Look for coordinates specifically for mainland France
           const franceCoordinates = countryWithMaxFreqDetails.geometry.coordinates;
           if (franceCoordinates && franceCoordinates.length > 0) {
-            // Find a centroid point for mainland France
             const centroid = findCentroid(franceCoordinates);
             [lon, lat] = centroid;
           }
         } else {
-          // For other countries, use the first point of the first polygon
           const coordinates = countryWithMaxFreqDetails.geometry.coordinates;
           if (coordinates && coordinates.length > 0 && coordinates[0].length > 0) {
             [lon, lat] = coordinates[0][0][0];
@@ -265,7 +292,7 @@ const Globe3D = ({ query }) => {
       <div id="globe">
         <Globe
           width={1200}
-          height={900}
+          height={750}
           ref={globeEl}
           backgroundColor="rgba(0,0,0,0)"
           showGlobe={true}
@@ -283,6 +310,7 @@ const Globe3D = ({ query }) => {
           }}
           polygonSideColor={() => '#000'}
           onPolygonHover={setHoverD}
+          onPolygonClick={handlePolygonClick}
           polygonsTransitionDuration={300}
           polygonLabel={({ properties: d }) => `
             <div class="polygon-label">
@@ -291,6 +319,12 @@ const Globe3D = ({ query }) => {
             </div>
           `}
         />
+        {isSidebarVisible && (
+        <div className="sidebar">
+          <button onClick={closeSidebar} className="dropdown-button">Close</button>
+          <DocumentList documents={selectedDocuments} country={documentsCountry} />
+        </div>
+      )}
       </div>
     </div>
   );
