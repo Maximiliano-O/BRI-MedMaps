@@ -1,0 +1,17 @@
+{
+    "mappings": {
+        "properties": {
+            "titulo": { "type": "text" },
+            "pais": { "type": "keyword" },
+            "topico": { "type": "text" },
+            "etiquetas": { "type": "keyword" },
+            "comentarios": {
+                "type": "nested",
+                "properties": {
+                    "pais": { "type": "keyword" },
+                    "contenido": { "type": "text" }
+                }
+            }
+        }
+    }
+}
